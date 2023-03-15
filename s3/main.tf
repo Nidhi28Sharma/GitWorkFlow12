@@ -1,6 +1,9 @@
-resource "aws_s3_bucket" "s3" {
-  bucket = var.bucket_name
+resource "aws_s3_bucket" "h11gupta1-bucket" {
+  bucket = var.bucket
+  force_destroy = true
   tags = {
-    "name" = "nidhi"
+    Name = var.tags[0]
+    owner = var.tags[1]
+    purpose = var.tags[2]
   }
 }
