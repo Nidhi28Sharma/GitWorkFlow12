@@ -1,4 +1,4 @@
-name: h-destroy
+name: ns-destroy
 
 on:
   workflow_dispatch:

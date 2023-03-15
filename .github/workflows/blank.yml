@@ -1,4 +1,4 @@
-name: h-deployment
+name: ns-deployment
 
 on:
   workflow_dispatch:
