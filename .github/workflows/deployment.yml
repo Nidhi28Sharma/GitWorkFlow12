@@ -1,141 +1,45 @@
-name : Deployment
+name: N-deployment
 
-
-
-on :
-
-  push :
-
-    branches : ["main"]
-
- 
-
+on:
   workflow_dispatch:
-
-    inputs :
-
-      
+     inputs : 
       region :
-
-        description: "Region : "
-
+        description: "Enter your region : "
         required: true  
-
         type: string    
 
+env:
+  BUCKET: nidhi-bucket12
+  TFSTATE_FILE: S3.tfstate
+  aws_region: ${{ github.event.inputs.region }}
 
+jobs:
+  s3bucket :
+      runs-on : ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - name: Terraform hashicorp setup
+          uses: hashicorp/setup-terraform@v2
 
-env :
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+            aws-region: ${{ env.aws_region }}
 
-  bucket : nidhi-bucket12
+        - name: terraform init
+          run: |
+            cd module
+            terraform init -reconfigure -backend-config="bucket=${{ env.BUCKET }}" -backend-config="key=${{ env.TFSTATE_FILE }}" -backend-config="region=${{ env.aws_region }}"
 
-  tfstate_file : terraform.tfstate
+        - name: terraform plan
+          run: |
+            cd module
+            terraform plan
 
-  region: ${{ github.event.inputs.region }}
-
- 
-
-jobs :
-
-  job1 :
-
-    runs-on : ubuntu-latest
-
-
-
-    steps:
-
-      - uses: actions/checkout@v3
-
-      - name: Terraform hashicorp setup
-
-        uses: hashicorp/setup-terraform@v2
-
-        with:
-
-          terraform_version: 1.1.7
-
-
-
-      - name: Configure AWS Credentials
-
-        uses: aws-actions/configure-aws-credentials@v1
-
-        with:
-
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-
-          aws-region: ${{ env.region }}
-
-
-
-      - name: terraform init
-
-        run: |
-          cd s3
-          terraform init -reconfigure 
-      - name: terraform plan
-
-        run: |
-          cd s3
-          terraform plan 
-      - name: terraform apply
-
-        run: |
-          cd s3
-          terraform apply -auto-approve
-         
-     
-  
-  job2 :
-
-    needs : job1
-    
-
-    runs-on : ubuntu-latest
-
-
-
-    steps:
-
-      - uses: actions/checkout@v3
-
-      - name: Terraform hashicorp setup
-
-        uses: hashicorp/setup-terraform@v2
-
-        with:
-
-          terraform_version: 1.1.7
-
-
-
-      - name: Configure AWS Credentials
-
-        uses: aws-actions/configure-aws-credentials@v1
-
-        with:
-
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-
-          aws-region: ${{ env.region }}
-
-
-      - name: terraform init
-
-        run: |
-        
-          terraform init -reconfigure -backend-config="bucket=${{ env.bucket }}" -backend-config="key=${{ env.tfstate_file}}" 
-      - name: terraform apply
-
-        run: |
-          
-          terraform apply -auto-approve
+        - name: terraform apply
+          run: |
+            cd module 
+            terraform apply -auto-approve
